@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ユーザー登録フォーム</title>
+</head>
+<body>
+  <h1>ユーザー登録</h1>
+<div class="create">
+    <a href="list_with_edit.html">ユーザー一覧</a>
+</div>
+  <form id="userForm">
+    <label>名前: <input type="text" id="name" required /></label><br />
+    <label>メール: <input type="email" id="email" required /></label><br />
+    <button type="submit">送信</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    document.getElementById("userForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+
+      fetch("http://localhost:8888/add_user.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name, email })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("result").innerText =
+          data.success ? "✅ 登録成功！" : "❌ 登録失敗";
+      })
+      .catch(error => {
+        console.error("エラー:", error);
+        document.getElementById("result").innerText = "⚠️ 通信エラー";
+      });
+    });
+  </script>
+</body>
+</html>

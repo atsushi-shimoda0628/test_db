@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ユーザー一覧と編集</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    button { margin-right: 5px; padding: 5px 10px; }
+  </style>
+</head>
+<body>
+  <h1>ユーザー一覧（編集付き）</h1>
+  <div class="create">
+    <a href="form.html">新規登録</a>
+  </div>
+  <table id="userTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>名前</th>
+        <th>メール</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    function loadUsers() {
+      fetch("http://localhost:8888/users.php")
+        .then(res => res.json())
+        .then(users => {
+          const tbody = document.querySelector("#userTable tbody");
+          tbody.innerHTML = "";
+
+          users.forEach(user => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${user.id}</td>
+              <td><span class="name">${user.name}</span></td>
+              <td><span class="email">${user.email}</span></td>
+              <td>
+                <button onclick="editUser(this, ${user.id})">✏️ 編集</button>
+                <button onclick="deleteUser(${user.id})">🗑 削除</button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+    }
+
+    function editUser(button, id) {
+      const row = button.closest("tr");
+      const nameSpan = row.querySelector(".name");
+      const emailSpan = row.querySelector(".email");
+
+      const name = nameSpan.textContent;
+      const email = emailSpan.textContent;
+
+      nameSpan.innerHTML = `<input type="text" value="${name}" class="edit-name">`;
+      emailSpan.innerHTML = `<input type="email" value="${email}" class="edit-email">`;
+
+      button.textContent = "💾 保存";
+      button.onclick = () => saveUser(button, id);
+    }
+
+    function saveUser(button, id) {
+      const row = button.closest("tr");
+      const newName = row.querySelector(".edit-name").value;
+      const newEmail = row.querySelector(".edit-email").value;
+
+      fetch("http://localhost:8888/update_user.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, name: newName, email: newEmail })
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          alert("更新成功");
+          loadUsers();
+        } else {
+          alert("更新失敗");
+        }
+      });
+    }
+
+    function deleteUser(id) {
+      if (!confirm("本当に削除しますか？")) return;
+      fetch("http://localhost:8888/delete_user.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          loadUsers();
+        } else {
+          alert("削除失敗");
+        }
+      });
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
